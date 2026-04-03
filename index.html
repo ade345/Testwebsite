@@ -1,23 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Hub</title>
+
+<style>
+body {
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+  margin:0;
+  display:flex;
+  justify-content:center;
+}
+
+.container {
+  max-width:500px;
+  width:100%;
+  padding:15px;
+  display:none;
+}
+
+header {
+  text-align:center;
+  padding:20px;
+  font-size:24px;
+}
+
+input, textarea {
+  width:100%;
+  padding:12px;
+  margin:5px 0;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:white;
+  margin-top:5px;
+  font-size:16px;
+}
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+}
+
+/* LOCK SCREEN */
+#lock, #setpass {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#0f172a;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+#lock input, #setpass input {
+  max-width:200px;
+}
+</style>
 </head>
+
 <body>
-    <div class="header">
-    <p>first name</p>
-    
-    </div>
-    
+
+<!-- SET PASSWORD -->
+<div id="setpass">
+  <h2>Create Password</h2>
+  <input type="password" id="newpass">
+  <button onclick="setPass()">Save</button>
+</div>
+
+<!-- LOCK SCREEN -->
+<div id="lock">
+  <h2>Enter Password</h2>
+  <input type="password" id="pass">
+  <button onclick="unlock()">Unlock</button>
+</div>
+
+<!-- APP -->
+<div class="container" id="app">
+
+<header>🔐 Secure Hub</header>
+
+<button onclick="logout()" style="background:#ef4444;">Logout</button>
+
+<!-- ✅ CLEAR SEARCH LABEL -->
+<input id="search" placeholder="🔍 Search your data..." oninput="searchData()">
+
+<h3>Add Data</h3>
+<input id="title" placeholder="Title">
+<input id="category" placeholder="Category">
+<textarea id="content" placeholder="Content"></textarea>
+<button onclick="addData()">Add</button>
+
+<h3>Results</h3>
+<div id="list"></div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("data")) || [];
+
+/* PASSWORD */
+function setPass(){
+  const p = document.getElementById("newpass").value.trim();
+  if(!p) return alert("Enter password");
+  localStorage.setItem("pass", p);
+  location.reload();
+}
+
+function unlock(){
+  const p = document.getElementById("pass").value;
+  if(p === localStorage.getItem("pass")){
+    document.getElementById("lock").style.display="none";
+    document.getElementById("app").style.display="block";
+  } else {
+    alert("Wrong password");
+  }
+}
+
+function logout(){
+  document.getElementById("app").style.display="none";
+  document.getElementById("lock").style.display="flex";
+}
+
+/* INIT */
+if(!localStorage.getItem("pass")){
+  document.getElementById("setpass").style.display="flex";
+  document.getElementById("lock").style.display="none";
+}else{
+  document.getElementById("setpass").style.display="none";
+}
+
+/* ✅ ADD DATA (FIXED) */
+function addData(){
+  const title = document.getElementById("title");
+  const category = document.getElementById("category");
+  const content = document.getElementById("content");
+
+  if(!title.value && !category.value && !content.value){
+    alert("Enter something");
+    return;
+  }
+
+  data.push({
+    title: title.value,
+    category: category.value,
+    content: content.value
+  });
+
+  localStorage.setItem("data", JSON.stringify(data));
+
+  // ✅ CLEAR INPUTS
+  title.value = "";
+  category.value = "";
+  content.value = "";
+
+  // ✅ IMPORTANT: CLEAR SCREEN (NO AUTO SHOW)
+  document.getElementById("list").innerHTML = "";
+}
+
+/* SEARCH ONLY SHOWS DATA */
+function searchData(){
+  const q = document.getElementById("search").value.toLowerCase().trim();
+  const list = document.getElementById("list");
+
+  list.innerHTML = "";
+
+  if(!q) return; // 🔥 SHOW NOTHING unless searching
+
+  const filtered = data.filter(item =>
+    item.title.toLowerCase().includes(q) ||
+    item.category.toLowerCase().includes(q) ||
+    item.content.toLowerCase().includes(q)
+  );
+
+  filtered.forEach((item, i)=>{
+    list.innerHTML += `
+      <div class="card">
+        <strong>${item.title}</strong><br>
+        <small>${item.category}</small>
+        <p>${item.content}</p>
+      </div>
+    `;
+  });
+}
+</script>
 
 </body>
 </html>
-
-
-
-
-
-
-
